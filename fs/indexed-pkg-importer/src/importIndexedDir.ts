@@ -181,8 +181,20 @@ function tryImportIndexedDir (importFile: ImportFile, newDir: string, filenames:
     fs.mkdirSync(path.join(newDir, dir), { recursive: true })
     createdDirs.add(dir)
   }
+  // Write package.json last so it acts as a completion marker:
+  // pkgExistsAtTargetDir() checks for package.json to decide whether a
+  // package is already imported, so it must only appear after every other
+  // file has been written.
+  let packageJsonSrc: string | undefined
   for (const [f, src] of filenames) {
+    if (f === 'package.json') {
+      packageJsonSrc = src
+      continue
+    }
     importFile(src, path.join(newDir, f))
+  }
+  if (packageJsonSrc != null) {
+    importFile(packageJsonSrc, path.join(newDir, 'package.json'))
   }
 }
 
